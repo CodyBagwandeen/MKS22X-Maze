@@ -60,4 +60,44 @@ public class Maze{
     }
     return output;
   }
+
+  private void wait(int millis){
+    try {
+      Thread.sleep(millis);
+    }catch(InterruptedException e) {
+    }
+  }
+
+  public void setAnimate(boolean b){
+    animate = b;
+
+  }
+
+  public int solve(){
+    // find S
+    int row = 0;
+    int col = 0;
+
+    for(int i = 0; i < maze.length; i++){
+      for(int j = 0; j < maze[j].length; j++){
+        if(maze[i][j] == 'S'){
+          row = i;
+          col = j;
+        }
+      }
+    }
+    //Erase the S
+    maze[row][col] = ' ';
+
+    //start there
+    return solve(row, col, 0);
+  }
+
+  public int solve(int row, int col, int counter){
+    if(maze[row][col] == 'E'){
+      return counter;
+    }
+
+    return -1;
+  }
 }

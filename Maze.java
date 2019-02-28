@@ -10,7 +10,7 @@ public class Maze{
     try{
       Maze m = new Maze("Maze1");
       System.out.println(m);
-      m.solve();
+      System.out.println(m.solve());
     } catch( FileNotFoundException e){
       System.out.println("File not found");
 
@@ -91,28 +91,28 @@ public class Maze{
     maze[row][col] = ' ';
 
     //start there
-    return solve(row, col, 0);
+    return solve(row, col, 0,0,0);
   }
 
-  public int solve(int row, int col, int counter){
+  public int solve(int row, int col, int counter, int oldrow, int oldcol){
     if(maze[row][col] == 'E'){ // when you reach the end you are at the end
       return counter;
     }
 
-    maze[row][col] = '@';
+    maze[row][col] = '@'; // put the @ to where to are
+
 
     for(int i = 0; i < 8; i+=2){
-      // check if the move is even in the maze
-      if( row + moves[i] >= 0 && row + moves[i] < maze.length && col + moves[i+1] >= 0 && col + moves[i+1] < maze[0].length){
-        // do the move if can move there
-        if( maze[row + moves[i]][col + moves[i+1]] == ' ' || maze[row+moves[i]][col + moves[i+1]] == '@'){
-          solve(row + moves[i], col + moves[i+1], counter+1);
-          System.out.println(maze);
-        }
+      if( maze[row + moves[i]][col + moves[i+1]] == ' ' ){
+        solve(row + moves[i], col + moves[i+1], counter+1, row, col);
       }
     }
 
+    // if you can't move anywhere
+    maze[row][col] = '.';
+    solve(oldrow, oldrow, counter-1, 1, 1);
 
+    // if there is no solution
     return -1;
   }
 }

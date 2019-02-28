@@ -3,12 +3,14 @@ import java.io.*;
 public class Maze{
 
   private char[][]maze;
+  private int[]moves = {1,0, -1,0, 0,-1, 0,1}; // up down left right
   private boolean animate; // false by default
 
   public static void main(String[] args){
     try{
       Maze m = new Maze("Maze1");
       System.out.println(m);
+      m.solve();
     } catch( FileNotFoundException e){
       System.out.println("File not found");
 
@@ -32,8 +34,7 @@ public class Maze{
         rows++;
         //System.out.println(line);//hopefully you can do other things with the line
     }
-    char[][] data = new char[rows][cols];
-    maze = data;
+    maze = new char[rows][cols];
 
     rows = 0;
 
@@ -79,7 +80,7 @@ public class Maze{
     int col = 0;
 
     for(int i = 0; i < maze.length; i++){
-      for(int j = 0; j < maze[j].length; j++){
+      for(int j = 0; j < maze[i].length; j++){
         if(maze[i][j] == 'S'){
           row = i;
           col = j;
@@ -94,9 +95,23 @@ public class Maze{
   }
 
   public int solve(int row, int col, int counter){
-    if(maze[row][col] == 'E'){
+    if(maze[row][col] == 'E'){ // when you reach the end you are at the end
       return counter;
     }
+
+    maze[row][col] = '@';
+
+    for(int i = 0; i < 8; i+=2){
+      // check if the move is even in the maze
+      if( row + moves[i] >= 0 && row + moves[i] < maze.length && col + moves[i+1] >= 0 && col + moves[i+1] < maze[0].length){
+        // do the move if can move there
+        if( maze[row + moves[i]][col + moves[i+1]] == ' ' || maze[row+moves[i]][col + moves[i+1]] == '@'){
+          solve(row + moves[i], col + moves[i+1], counter+1);
+          System.out.println(maze);
+        }
+      }
+    }
+
 
     return -1;
   }

@@ -1,118 +1,172 @@
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 public class Maze{
 
   private char[][]maze;
-  private int[]moves = {1,0, -1,0, 0,-1, 0,1}; // up down left right
-  private boolean animate; // false by default
+  private boolean animate;
+  private int length;
+  private int width;
+  private String Maze;
+  private int[] cords;
 
-  public static void main(String[] args){
-    try{
-      Maze m = new Maze("Maze1");
-      System.out.println(m);
-      System.out.println(m.solve());
-    } catch( FileNotFoundException e){
-      System.out.println("File not found");
-
-    }
-
-  }
-
+  /*Constructor loads a maze text file, and sets animate to false by default.
+      When the file is not found then:
+         throw a FileNotFoundException
+      You may assume the file contains a rectangular ascii maze, made with the following 4 characters:
+      '#' - Walls - locations that cannot be moved onto
+      ' ' - Empty Space - locations that can be moved onto
+      'E' - the location of the goal (exactly 1 per file)
+      'S' - the location of the start(exactly 1 per file)
+      You ma also assume the maze has a border of '#' around the edges.
+      So you don't have to check for out of bounds!
+    */
   public Maze(String filename) throws FileNotFoundException{
-
-    File text = new File("Maze1.txt");
-    // can be a path like: "/full/path/to/file.txt" or "../data/file.txt"
-
-    //inf stands for the input file
-    Scanner inf = new Scanner(text);
-
-    int rows = 0; // number of rows in file
-    int cols = 0; // number of cols in file
+    File Data = new File(filename);
+    Scanner inf = new Scanner(Data);
+    Maze = "";
+    int counter = 0;
+    width = 0;
     while(inf.hasNextLine()){
         String line = inf.nextLine();
-        cols = line.length();
-        rows++;
-        //System.out.println(line);//hopefully you can do other things with the line
+        if(width == 0){width = line.length();}
+        Maze += line + "\n";
+        counter++;
     }
-    maze = new char[rows][cols];
-
-    rows = 0;
-
-    inf =  new Scanner(text);
-
-    while(inf.hasNextLine()){
-      String line = inf.nextLine();
-      for( int i = 0; i < line.length(); i++){
-        maze[rows][i] = line.charAt(i);
+    length = counter;
+    maze = new char[length][width];
+    File Data2 = new File(filename);
+    Scanner inf2 = new Scanner(Data2);
+    counter = 0;
+    while(inf2.hasNextLine()){
+      String line = inf2.nextLine();
+      for(int j = 0; counter < length && j < width; j++){
+        maze[counter][j] = line.charAt(j);
       }
-      rows++;
+      counter++;
     }
+    int[] result = start();
+    cords = new int[2];
+    cords[0] = result[0];
+    cords[1] = result[1];
+    animate = false;
   }
 
-  public String toString(){
-    String output = "";
-    for(int i = 0; i < maze.length; i++){
-      for(int j = 0; j < maze[i].length; j++){
-        output += "" + maze[i][j];
-        if (j == maze[i].length -1){
-          output += "\n";
+  private void wait(int millis){ // waits for x millis
+        try {
+            Thread.sleep(millis);
+        }
+        catch (InterruptedException e) {
+        }
+    }
+
+  public void clearTerminal(){
+    //erase terminal, go to top left of screen.
+    System.out.println("\033[2J\033[1;1H");
+  }
+
+  /*Wrapper solveR Function returns the helper function
+      Note the helper function has the same name, but different parameters.
+      Since the constructor exits when the file is not found or is missing an E or S, we can assume it exists.
+    */
+  public int[] start(){
+    int[] result = new int[2];
+    int row = 0;
+    int col = 0;
+    int counter = 0;
+    for(int i = 0; i < length; i++){
+      for(int j = 0; j < width; j++){
+      if(maze[i][j] == 'S'){
+        row = i;
+        col = j;
+        counter++;
+      }
+    }
+    }
+    if(counter > 2){throw new IllegalStateException();}
+    result[0] = row;
+    result[1] = col;
+    return result;
+  }
+
+
+  public int solve(){
+    return solveR(cords[0],cords[1],0);
+  }
+
+  /*
+      Recursive solve function:
+      A solved maze has a path marked with '@' from S to E.
+      Returns the number of @ symbols from S to E when the maze is solved,
+      Returns -1 when the maze has no solution.
+      Postcondition:
+        The S is replaced with '@' but the 'E' is not.
+        All visited spots that were not part of the solution are changed to '.'
+        All visited spots that are part of the solution are changed to '@'
+    */
+  private int solveR(int row, int col, int count){ //you can add more parameters since this is private
+    //automatic animation! You are welcome.
+      if(animate){ // haha the animation kinda doesnt work for me, but it is cool to watch
+          clearTerminal();
+          System.out.println(this);
+          clearTerminal();
+          wait(20);
+      }
+      char tile = maze[row][col];
+      if(tile == 'E'){
+        return count;
+      } else if(canMove(tile)){
+        return -1;
+      }
+      int[][] moves = new int[][] { {1,0} , {-1,0}, {0,1}, {0,-1} };
+      for(int i = 0; i < moves.length; i++){
+        int rowChange = row + moves[i][0];
+        int colChange = col + moves[i][1];
+        maze[row][col] = '@';
+        int check = solveR(rowChange, colChange, count+1);
+        if(check <= 0){
+          maze[row][col] = '.';
+        }
+        else{
+          return check;
         }
       }
-    }
-    return output;
+    return 0;
   }
 
-  private void wait(int millis){
-    try {
-      Thread.sleep(millis);
-    }catch(InterruptedException e) {
-    }
+  public boolean canMove(char tile){
+    if(tile == '#' || tile == '.' || tile == '@'){return true;}
+    return false;
   }
 
   public void setAnimate(boolean b){
     animate = b;
-
   }
 
-  public int solve(){
-    // find S
-    int row = 0;
-    int col = 0;
+  public String GetMaze(){
+    return Maze;
+  }
 
-    for(int i = 0; i < maze.length; i++){
-      for(int j = 0; j < maze[i].length; j++){
-        if(maze[i][j] == 'S'){
-          row = i;
-          col = j;
-        }
+  public String toString(){
+    String result = "";
+    for(int i = 0; i < length; i++){
+      for(int j = 0; j < width; j++){
+        result += maze[i][j];
+        if(j == width - 1){result += "\n";}
       }
     }
-    //Erase the S
-    maze[row][col] = ' ';
-
-    //start there
-    return solve(row, col, 0,0,0);
+    return result;
   }
 
-  public int solve(int row, int col, int counter, int oldrow, int oldcol){
-    if(maze[row][col] == 'E'){ // when you reach the end you are at the end
-      return counter;
-    }
-
-    maze[row][col] = '@'; // put the @ to where to are
-
-
-    for(int i = 0; i < 8; i+=2){
-      if( maze[row + moves[i]][col + moves[i+1]] == ' ' ){
-        solve(row + moves[i], col + moves[i+1], counter+1, row, col);
+  public static void main(String args[]){
+    try{
+      Maze maze = new Maze(args[0]);
+      int moves = maze.solve();
+      String solution = maze.toString();
+      System.out.println(moves);
+      System.out.println(maze);
+    } catch(FileNotFoundException e){
+      System.out.println("File not found");
       }
     }
-
-    // if you can't move anywhere
-    maze[row][col] = '.';
-    solve(oldrow, oldrow, counter-1, 1, 1);
-
-    // if there is no solution
-    return -1;
   }
-}
